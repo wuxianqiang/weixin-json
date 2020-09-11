@@ -1,0 +1,28 @@
+{
+  "name": "weixin-json",
+  "version": "1.0.0",
+  "description": "微信组件json列表",
+  "main": "wx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wuxianqiang/weixin-json.git"
+  },
+  "keywords": [
+    "weixin"
+  ],
+  "author": "wuxianqiang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wuxianqiang/weixin-json/issues"
+  },
+  "homepage": "https://github.com/wuxianqiang/weixin-json#readme",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "parse-entities": "^2.0.0",
+    "request": "^2.88.2"
+  }
+}
