@@ -9,6 +9,8 @@ const keys = [
   'match-media',
   'movable-area',
   'movable-view',
+  'page-container',
+  'root-portal',
   'scroll-view',
   'swiper',
   'swiper-item',
@@ -23,6 +25,7 @@ const keys = [
   'editor',
   'form',
   'input',
+  'keyboard-accessory',
   'label',
   'picker',
   'picker-view',
@@ -36,6 +39,8 @@ const keys = [
   'navigator',
   'audio',
   'camera',
+  'channel-live',
+  'channel-video',
   'image',
   'live-player',
   'live-pusher',
@@ -64,24 +69,129 @@ async function toJson () {
 
 toJson()
 
+function handleContentV2(htmlContent) {
+  const $ = cheerio.load(htmlContent);
+  const data = {};
+  $('.have-children-table tbody tr').each((index, element) => {
+    const $element = $(element);
+    const property = $element.find('td:nth-child(2)').text().trim();
+    const type = $element.find('td:nth-child(3)').text().trim();
+    const defaultValue = $element.find('td:nth-child(4)').text().trim();
+    const required = $element.find('td:nth-child(5)').text().trim();
+    const version = $element.find('td:nth-child(7) a').text().trim();
+    const description = $element.find('td:nth-child(6)').text().trim();
+    if (!required) return;
+    let validValues = '合法值说明: 无';
+  
+    // 检查是否有合法值表格
+    if ($element.next().hasClass('children-table')) {
+      const validValuesTable = $element.next().find('table tbody tr');
+      validValues = '合法值说明: ' + validValuesTable.map((i, el) => {
+        const $el = $(el);
+        const value = $el.find('td:nth-child(1)').text().trim();
+        const valueDescription = $el.find('td:nth-child(2)').text().trim();
+        return `${value}${valueDescription ? ` ${valueDescription}` : ''}`;
+      }).get().join(',');
+    }
+    if (/^[a-zA-Z]+([-:][a-zA-Z]+)*$/.test(property)) {
+      // data.push({
+        data[property] = [
+          `属性: ${property}`,
+          `类型: ${type}`,
+          `默认值: ${defaultValue || '无'}`,
+          `必填: ${required}`,
+          `最低版本: ${version}`,
+          `说明: ${description}`,
+          validValues,
+        ]
+      // });
+    };
+  });
+  if (Object.keys(data).length) {
+    return data;
+  }
+  $('.table-wrp tbody tr').each((index, element) => {
+    const $element = $(element);
+    const property = $element.find('td:nth-child(1)').text().trim();
+    const type = $element.find('td:nth-child(2)').text().trim();
+    const defaultValue = $element.find('td:nth-child(3)').text().trim();
+    const required = $element.find('td:nth-child(4)').text().trim();
+    const version = $element.find('td:nth-child(6) a').text().trim();
+    const description = $element.find('td:nth-child(5)').text().trim();
+    if (!required) return;
+
+    let validValues = '合法值说明: 无';
+  
+    // 检查是否有合法值表格
+    if ($element.next().hasClass('children-table')) {
+      const validValuesTable = $element.next().find('table tbody tr');
+      validValues = '合法值说明: ' + validValuesTable.map((i, el) => {
+        const $el = $(el);
+        const value = $el.find('td:nth-child(1)').text().trim();
+        const valueDescription = $el.find('td:nth-child(2)').text().trim();
+        return `${value}${valueDescription ? ` ${valueDescription}` : ''}`;
+      }).get().join(',');
+    }
+    if (/^[a-zA-Z]+([-:][a-zA-Z]+)*$/.test(property)) {
+      // data.push({
+        data[property] = [
+          `属性: ${property}`,
+          `类型: ${type}`,
+          `默认值: ${defaultValue || '无'}`,
+          `必填: ${required}`,
+          `最低版本: ${version}`,
+          `说明: ${description}`,
+          validValues,
+        ]
+      // });
+    };
+  });
+  return data;
+}
+
+function handleTitleV2(htmlContent) {
+  const $ = cheerio.load(htmlContent);
+  let result = '';
+
+  // 选择h1元素
+  const h1 = $('h1');
+  const title = h1.text().replace(/#/, '').trim() + ' ';
+
+  // 选择h1元素后面的p元素，直到下一个h2元素
+  h1.nextUntil('h2').each((index, element) => {
+    result += $(element).text().trim() + ' ';
+  });
+
+  const h2 = $('h2:first');
+  result = title + h2.next().text().trim() + ' ' + result;
+
+  // 去除多余的空格
+  result = result.replace(/\s+/g, ' ').trim();
+
+  return [result];
+}
+
 function handleRequest (key, realKey) {
   return new Promise((resolve, reject) => {
     let url = formKeyToUrl(key)
     request(url, (err, response, body) => {
-      const $ = cheerio.load(body)
-      let content = $('.page__wrp').html()
-      content = decode(content)
-      let [, t1, content1, t2, content2] = content.split(/<h1.*?>([\s\S]*?)<\/h1>/g)
-      let temp = {}
-      if (content1) {
-        let res = handleContent(content1)
-        temp[handleText(t1)] = res
-      }
-      if (content2) {
-        let res = handleContent(content2)
-        temp[handleText(t2)] = res
-      }
-      resolve(temp)
+      const tableList = handleContentV2(body)
+      const descriptList = handleTitleV2(body)
+
+      // const $ = cheerio.load(body)
+      // let content = $('.page__wrp').html()
+      // content = decode(content)
+      // let [, t1, content1, t2, content2] = content.split(/<h1.*?>([\s\S]*?)<\/h1>/g)
+      // let temp = {}
+      // if (content1) {
+      //   let res = handleContent(content1)
+      //   temp[handleText(t1)] = res
+      // }
+      // if (content2) {
+      //   let res = handleContent(content2)
+      //   temp[handleText(t2)] = res
+      // }
+      resolve({[key]: {tableList, descriptList}})
     })
   })
 }

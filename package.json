@@ -1,6 +1,6 @@
 {
   "name": "weixin-json",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "微信组件json列表",
   "main": "wx.js",
   "scripts": {
@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/wuxianqiang/weixin-json#readme",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
   },
   "devDependencies": {
     "parse-entities": "^2.0.0",
