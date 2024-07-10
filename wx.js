@@ -86,12 +86,12 @@ function handleContentV2(htmlContent) {
     // 检查是否有合法值表格
     if ($element.next().hasClass('children-table')) {
       const validValuesTable = $element.next().find('table tbody tr');
-      validValues = '合法值说明: ' + validValuesTable.map((i, el) => {
+      validValues = '合法值说明: \n    - ' + validValuesTable.map((i, el) => {
         const $el = $(el);
         const value = $el.find('td:nth-child(1)').text().trim();
         const valueDescription = $el.find('td:nth-child(2)').text().trim();
         return `${value}${valueDescription ? ` ${valueDescription}` : ''}`;
-      }).get().join(',');
+      }).get().join('\n    - ');
     }
     if (/^[a-zA-Z]+([-:][a-zA-Z]+)*$/.test(property)) {
       // data.push({
